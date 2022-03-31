@@ -1,0 +1,59 @@
+# Default values for task1.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: "petclinic"
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+
+replicaCount: 1
+
+image:
+  repository: arey/springboot-petclinic
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+#config map
+petclinic_env:
+  SPRING_PROFILES_ACTIVE: "prod"
+
+service:
+  type: NodePort
+  ports:
+    http:
+      targetPort: 8080
+      protocol: TCP
+      port: 80
+
+checks:
+  liveness:
+    httpGet:
+      path: /
+      port: http
+  readiness:
+    httpGet:
+      path: /
+      port: http
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  tls: ""
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            name: petclinic
+            port: 80

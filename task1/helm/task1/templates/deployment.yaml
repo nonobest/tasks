@@ -1,0 +1,64 @@
+{{- $root := . -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "task1.fullname" . }}
+  labels:
+    {{- include "task1.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "task1.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "task1.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "task1.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          {{- range $key, $value := .Values.petclinic_env }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "task1.fullname" $root }}-env
+                  key: {{ $key }}
+          {{- end }}
+          ports:
+          {{- range $port, $portValue := .Values.service.ports }}
+            - name: {{ $port }}
+              containerPort: {{ $portValue.targetPort }}
+              protocol: {{ $portValue.protocol }}
+          {{- end }}
+          {{- if .Values.checks.liveness }}
+          livenessProbe:
+            {{- toYaml .Values.checks.liveness | nindent 12 }}
+          {{- end }}
+          {{- if .Values.checks.readiness }}
+          readinessProbe:
+            {{- toYaml .Values.checks.readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

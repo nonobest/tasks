@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "task1.labels" . | nindent 4 }}
+  name: {{ include "task1.fullname" . }}-env
+data:
+  # Public env variables
+  {{- range $key, $value := .Values.petclinic_env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
