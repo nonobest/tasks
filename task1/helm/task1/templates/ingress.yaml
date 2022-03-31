@@ -53,8 +53,8 @@ spec:
                 port:
                   number: {{ .backend.port }}
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+              serviceName: {{ .backend.name }}
+              servicePort: {{ .backend.port }}
               {{- end }}
           {{- end }}
     {{- end }}
