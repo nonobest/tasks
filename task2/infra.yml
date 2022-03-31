@@ -14,6 +14,12 @@ Resources:
         - Key: "Name"
           Value: "UserManagementVpc"
 
+  TestVpc01IPv6:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      AmazonProvidedIpv6CidrBlock: true
+      VpcId: !Ref UserManagementVpc
+
   IGW:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -75,6 +81,12 @@ Resources:
   PrivSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
+      AssignIpv6AddressOnCreation: true
+      Ipv6CidrBlock:
+        Fn::Sub:
+          - "${VpcPart}${SubnetPart}"
+          - VpcPart: !Select [ 0, !Split [ '00::/56', !Select [ 0, !GetAtt UserManagementVpc.Ipv6CidrBlocks ]]]
+            SubnetPart: '00::/64'
       AvailabilityZone: !Sub '${Region}a'
       CidrBlock: 10.0.64.0/18
       Tags:
@@ -135,6 +147,12 @@ Resources:
   PrivSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
+      AssignIpv6AddressOnCreation: true
+      Ipv6CidrBlock:
+        Fn::Sub:
+          - "${VpcPart}${SubnetPart}"
+          - VpcPart: !Select [ 0, !Split [ '00::/56', !Select [ 0, !GetAtt UserManagementVpc.Ipv6CidrBlocks ]]]
+            SubnetPart: '00::/64'
       AvailabilityZone: !Sub '${Region}b'
       CidrBlock: 10.0.65.0/18
       Tags:
@@ -196,6 +214,12 @@ Resources:
   PrivSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
+      AssignIpv6AddressOnCreation: true
+      Ipv6CidrBlock:
+        Fn::Sub:
+          - "${VpcPart}${SubnetPart}"
+          - VpcPart: !Select [ 0, !Split [ '00::/56', !Select [ 0, !GetAtt UserManagementVpc.Ipv6CidrBlocks ]]]
+            SubnetPart: '00::/64'
       AvailabilityZone: !Sub '${Region}c'
       CidrBlock: 10.0.66.0/18
       Tags:
