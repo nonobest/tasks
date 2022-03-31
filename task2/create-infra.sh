@@ -1,0 +1,1 @@
+aws cloudformation create-stack --template-body=file://./infra.yml --stack-name=infrastructure

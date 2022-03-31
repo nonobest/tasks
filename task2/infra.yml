@@ -1,0 +1,288 @@
+Parameters:
+  Region:
+    Type: String
+    Default: 'eu-central-1'
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "AWS infra"
+Resources:
+  UserManagementVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/24"
+      Tags:
+        - Key: "Name"
+          Value: "UserManagementVpc"
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "MyIGW"
+
+  IgwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref UserManagementVpc
+
+  MainRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "MainRT"
+      VpcId: !Ref UserManagementVpc
+
+  MainRTRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+      RouteTableId: !Ref MainRT
+
+  MainRTSubnetAAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MainRT
+      SubnetId: !Ref PubSubnetA
+
+  MainRTSubnetBAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MainRT
+      SubnetId: !Ref PubSubnetB
+  
+  MainRTSubnetBAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MainRT
+      SubnetId: !Ref PubSubnetC
+
+# =============== Subnet A ===============
+
+  PubSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}a'
+      CidrBlock: 10.0.0.0/23
+      Tags:
+        - Key: 'Name'
+          Value: 'PubSubnetA'
+      VpcId: !Ref UserManagementVpc
+
+  PrivSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}a'
+      CidrBlock: 10.0.64.0/18
+      Tags:
+        - Key: 'Name'
+          Value: 'PrivSubnetA'
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetARouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "PrivateSubnetARouteTable"
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetAAssociationWithRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnetARouteTable
+      SubnetId: !Ref PrivSubnetA
+
+  EIPa:
+    Type: AWS::EC2::EIP
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "EIPa"
+
+  NATa:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIPa.AllocationId
+      SubnetId: !Ref PubSubnetA
+      Tags:
+        - Key: "Name"
+          Value: "NATa"
+
+  PrivateSubnetARoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATa
+      RouteTableId: !Ref PrivateSubnetARouteTable
+
+# =============== END Subnet A ===============
+
+# =============== Subnet B ===============
+  PubSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}b'
+      CidrBlock: 10.0.1.0/23
+      Tags:
+        - Key: 'Name'
+          Value: 'PubSubnetB'
+      VpcId: !Ref UserManagementVpc
+
+  PrivSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}b'
+      CidrBlock: 10.0.65.0/18
+      Tags:
+        - Key: 'Name'
+          Value: 'PrivSubnetB'
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetBRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "PrivateSubnetBRouteTable"
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetBAssociationWithRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnetBRouteTable
+      SubnetId: !Ref PrivSubnetB
+
+  EIPb:
+    Type: AWS::EC2::EIP
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "EIPb"
+
+  NATb:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIPb.AllocationId
+      SubnetId: !Ref PubSubnetB
+      Tags:
+        - Key: "Name"
+          Value: "NATb"
+
+  PrivateSubnetBRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATb
+      RouteTableId: !Ref PrivateSubnetBRouteTable
+
+# =============== END Subnet B ===============
+
+
+# =============== Subnet C ===============
+  PubSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}c'
+      CidrBlock: 10.0.3.0/23
+      Tags:
+        - Key: 'Name'
+          Value: 'PubSubnetC'
+      VpcId: !Ref UserManagementVpc
+
+  PrivSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub '${Region}c'
+      CidrBlock: 10.0.66.0/18
+      Tags:
+        - Key: 'Name'
+          Value: 'PrivSubnetC'
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetBRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "PrivateSubnetBRouteTable"
+      VpcId: !Ref UserManagementVpc
+
+  PrivateSubnetBAssociationWithRT:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnetBRouteTable
+      SubnetId: !Ref PrivSubnetC
+
+  EIPb:
+    Type: AWS::EC2::EIP
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "EIPc"
+
+  NATb:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIPb.AllocationId
+      SubnetId: !Ref PubSubnetC
+      Tags:
+        - Key: "Name"
+          Value: "NATc"
+
+  PrivateSubnetBRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATc
+      RouteTableId: !Ref PrivateSubnetBRouteTable
+
+# =============== END Subnet C ===============
+
+Outputs:
+  VpcId:
+    Value: !Ref UserManagementVpc
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-VpcId"
+  PrivSubnetA:
+    Value:
+      Ref: PrivSubnetA
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivSubnetA"
+  PubSubnetA:
+    Value:
+      Ref: PubSubnetA
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PubSubnetA"
+
+  PrivSubnetB:
+    Value:
+      Ref: PrivSubnetB
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivSubnetB"
+  PubSubnetB:
+    Value:
+      Ref: PubSubnetB
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PubSubnetB"
+
+  PrivSubnetC:
+    Value:
+      Ref: PrivSubnetC
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PrivSubnetC"
+  PubSubnetC:
+    Value:
+      Ref: PubSubnetC
+    Export:
+      Name:
+        Fn::Sub: "${AWS::StackName}-PubSubnetC"
